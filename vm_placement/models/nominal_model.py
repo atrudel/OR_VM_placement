@@ -1,7 +1,7 @@
 import pyomo.environ as pyo
 from pyomo.environ import AbstractModel
 
-from vm_placement.data_handlers.data_loader import Data
+from vm_placement.data_handler.data_loader import Data
 
 
 class NominalModel:
