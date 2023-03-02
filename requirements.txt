@@ -1,0 +1,6 @@
+jupyter
+pyomo
+pandas
+matplotlib
+numpy
+glpk
