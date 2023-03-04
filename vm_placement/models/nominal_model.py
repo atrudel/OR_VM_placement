@@ -1,16 +1,18 @@
 import pyomo.environ as pyo
 from pyomo.environ import AbstractModel
 
-from vm_placement.data_handler.data_loader import Data
+from vm_placement.data_handling.data_loader import Data
 
 
 class NominalModel:
-    def __init__(self, linear_relaxation: bool = False):
+    def __init__(self, linear_relaxation: bool = False, verbose=False):
         self.linear_relaxation: bool = linear_relaxation
+        self.verbose = verbose
         self.model = AbstractModel()
         self.model = self._add_variables(self.model)
         self.model = self._add_constraints(self.model)
         self.model = self._add_objective(self.model)
+
 
     def _add_variables(self, model: AbstractModel) -> AbstractModel:
 
@@ -67,10 +69,12 @@ class NominalModel:
 
         # Meeting VM demand
         model.DemandConstraint = pyo.Constraint(model.I_vm, rule=constraint_rule_vm_demand)
+
         # Not going over server capacities
-        model.CPUCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_cpu_capacity)
-        model.MemoryCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_memory_capacity)
-        model.StorageCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_storage_capacity)
+        # model.CPUCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_cpu_capacity)
+        # model.MemoryCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_memory_capacity)
+        # model.StorageCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_storage_capacity)
+
         # Counting the number of active servers
         model.ServerCountConstraint = pyo.Constraint(model.I_vm, model.J_server, rule=constraint_rule_server_count)
         return model
@@ -86,7 +90,7 @@ class NominalModel:
         data_dict = self._format_data(data)
         model_instance = self.model.create_instance(data_dict)
         opt = pyo.SolverFactory('glpk')
-        solution = opt.solve(model_instance)
+        solution = opt.solve(model_instance, tee=self.verbose)
         return solution
 
     def _format_data(self, data: Data) -> dict:
@@ -114,18 +118,6 @@ class NominalModel:
         else:
             raise NotImplemented("Case with multiple server capacities not yet implemented")
         return data_dict
-        # return {
-        #     None: {
-        #         'n_vms': {None: 2},
-        #         'cpu_requirement': {1: 10, 2:20},
-        #         'memory_requirement': {1: 10, 2:20},
-        #         'storage_requirement': {1: 10, 2:20},
-        #         'm_servers': {None: 3},
-        #         'cpu_capacity': {1:20, 2:20, 3: 20},
-        #         'memory_capacity': {1:30, 2:30, 3: 30},
-        #         'storage_capacity': {1:30, 2:30, 3: 30}
-        #     }
-        # }
 
 
 
@@ -133,6 +125,7 @@ if __name__ == '__main__':
     data = Data('data/vm_data.csv', 'data/unique_server_data.csv')
     model = NominalModel(linear_relaxation=True)
     solution = model.solve(data)
+    print(solution.cost)
     print(solution)
 
 

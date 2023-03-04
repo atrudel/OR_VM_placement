@@ -4,3 +4,6 @@ pandas
 matplotlib
 numpy
 glpk
+pytest
+tqdm
+scikit-learn
