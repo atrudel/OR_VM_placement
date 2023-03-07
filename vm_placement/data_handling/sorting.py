@@ -21,7 +21,7 @@ def compute_and_add_weighted_resources(data: pd.DataFrame, scarcity_ratio: pd.Se
 def sort_by_scarcity_ratio(data: pd.DataFrame, scarcity_ratio: pd.Series):
     data_scaled = data[resource_columns] / data[resource_columns].max()
     weighted_resources = (data_scaled * scarcity_ratio).sum(axis=1)
-    data['weighted_resources'] = weighted_resources
+    data.loc[:, 'weighted_resources'] = weighted_resources
     data = data.sort_values(by='weighted_resources', ascending=False)
     data = data.drop('weighted_resources', axis=1)
     return data
