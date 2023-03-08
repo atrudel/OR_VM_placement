@@ -71,9 +71,9 @@ class NominalModel:
         model.DemandConstraint = pyo.Constraint(model.I_vm, rule=constraint_rule_vm_demand)
 
         # Not going over server capacities
-        # model.CPUCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_cpu_capacity)
-        # model.MemoryCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_memory_capacity)
-        # model.StorageCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_storage_capacity)
+        model.CPUCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_cpu_capacity)
+        model.MemoryCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_memory_capacity)
+        model.StorageCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_storage_capacity)
 
         # Counting the number of active servers
         model.ServerCountConstraint = pyo.Constraint(model.I_vm, model.J_server, rule=constraint_rule_server_count)
@@ -122,7 +122,19 @@ class NominalModel:
 
 
 if __name__ == '__main__':
-    data = Data('data/vm_data.csv', 'data/unique_server_data.csv')
+    import pandas as pd
+
+    # Specify server capacity
+    server_capacity = pd.DataFrame({
+        'vCPU': [64],
+        'Memory': [512],
+        'Storage': [2048]
+    })
+    data = Data('data/vm_data.csv', server_capacity, 1)
+    # Remove oversize VMs
+    data.vm_data = data.vm_data[data.vm_data['Storage'] <= 2048.0].reset_index()
+
+    # Launch MIP solver
     model = NominalModel(linear_relaxation=True)
     solution = model.solve(data)
     print(solution.cost)
