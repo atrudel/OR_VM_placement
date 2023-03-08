@@ -43,28 +43,32 @@ class NominalModel:
 
     def _add_constraints(self, model) -> AbstractModel:
         def constraint_rule_vm_demand(model: AbstractModel, i_vm: int):
-            """Each copy of a demanded VM must be located in exactly ONE server"""
+            """Each VM must be located in exactly ONE server"""
             return sum(model.x[i_vm, j] for j in model.J_server) == 1
 
         def constraint_rule_cpu_capacity(model: AbstractModel, j_server: int):
+            """The sum of the vCPU requirements of all VMs deployed in a server must not exceed its capacity."""
             return sum(
                 model.cpu_requirement[i] * model.x[i, j_server]
                 for i in model.I_vm
             ) <= model.cpu_capacity[j_server]
 
         def constraint_rule_memory_capacity(model: AbstractModel, j_server: int):
+            """The sum of the Memory requirements of all VMs deployed in a server must not exceed its capacity."""
             return sum(
                 model.memory_requirement[i] * model.x[i, j_server]
                 for i in model.I_vm
             ) <= model.memory_capacity[j_server]
 
         def constraint_rule_storage_capacity(model: AbstractModel, j_server: int):
+            """The sum of the Storage requirements of all VMs deployed in a server must not exceed its capacity."""
             return sum(
                 model.storage_requirement[i] * model.x[i, j_server]
                 for i in model.I_vm
             ) <= model.storage_capacity[j_server]
 
         def constraint_rule_server_count(model: AbstractModel, i_vm, j_server):
+            """A server is considered used when at least one VM is deployed on it."""
             return model.x[i_vm, j_server] <= model.y[j_server]
 
         # Meeting VM demand
