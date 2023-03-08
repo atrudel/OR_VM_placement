@@ -5,14 +5,14 @@ from vm_placement.data_handling.data_loader import Data
 
 
 class NominalModel:
-    def __init__(self, linear_relaxation: bool = False, verbose=False):
+    def __init__(self, linear_relaxation: bool = False, solver: str = 'glpk', verbose: bool = False):
         self.linear_relaxation: bool = linear_relaxation
-        self.verbose = verbose
+        self.solver: str = solver
+        self.verbose: bool = verbose
         self.model = AbstractModel()
         self.model = self._add_variables(self.model)
         self.model = self._add_constraints(self.model)
         self.model = self._add_objective(self.model)
-
 
     def _add_variables(self, model: AbstractModel) -> AbstractModel:
 
@@ -72,12 +72,12 @@ class NominalModel:
             return model.x[i_vm, j_server] <= model.y[j_server]
 
         # Meeting VM demand
-        model.DemandConstraint = pyo.Constraint(model.I_vm, rule=constraint_rule_vm_demand)
+        # model.DemandConstraint = pyo.Constraint(model.I_vm, rule=constraint_rule_vm_demand)
 
         # Not going over server capacities
-        model.CPUCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_cpu_capacity)
-        model.MemoryCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_memory_capacity)
-        model.StorageCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_storage_capacity)
+        # model.CPUCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_cpu_capacity)
+        # model.MemoryCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_memory_capacity)
+        # model.StorageCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_storage_capacity)
 
         # Counting the number of active servers
         model.ServerCountConstraint = pyo.Constraint(model.I_vm, model.J_server, rule=constraint_rule_server_count)
@@ -91,9 +91,12 @@ class NominalModel:
         return model
 
     def solve(self, data: Data):
+        print(self._ascii_art())
         data_dict = self._format_data(data)
+        print(f"Instianting model with {len(data.vm_data)} VMs and {len(data.server_data)} server specification(s)...")
         model_instance = self.model.create_instance(data_dict)
-        opt = pyo.SolverFactory('glpk')
+        opt = pyo.SolverFactory(self.solver)
+        print(f"Launching solving with {self.solver}...{' [verbose off]' if not self.verbose else ''}")
         solution = opt.solve(model_instance, tee=self.verbose)
         return solution
 
@@ -123,6 +126,16 @@ class NominalModel:
             raise NotImplemented("Case with multiple server capacities not yet implemented")
         return data_dict
 
+    def _ascii_art(self) -> str:
+        return """
+██╗   ██╗███╗   ███╗    ██████╗ ██╗      █████╗  ██████╗███████╗███╗   ███╗███████╗███╗   ██╗████████╗
+██║   ██║████╗ ████║    ██╔══██╗██║     ██╔══██╗██╔════╝██╔════╝████╗ ████║██╔════╝████╗  ██║╚══██╔══╝
+██║   ██║██╔████╔██║    ██████╔╝██║     ███████║██║     █████╗  ██╔████╔██║█████╗  ██╔██╗ ██║   ██║   
+╚██╗ ██╔╝██║╚██╔╝██║    ██╔═══╝ ██║     ██╔══██║██║     ██╔══╝  ██║╚██╔╝██║██╔══╝  ██║╚██╗██║   ██║   
+ ╚████╔╝ ██║ ╚═╝ ██║    ██║     ███████╗██║  ██║╚██████╗███████╗██║ ╚═╝ ██║███████╗██║ ╚████║   ██║   
+  ╚═══╝  ╚═╝     ╚═╝    ╚═╝     ╚══════╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝      
+        """
+
 
 
 if __name__ == '__main__':
@@ -141,7 +154,6 @@ if __name__ == '__main__':
     # Launch MIP solver
     model = NominalModel(linear_relaxation=True)
     solution = model.solve(data)
-    print(solution.cost)
     print(solution)
 
 
