@@ -3,13 +3,13 @@ from typing import Union, List, Optional
 import pandas as pd
 from tqdm import tqdm
 
-from vm_placement.algorithms.algo import Algo
+from vm_placement.algorithms.approximation.approx_algo import ApproxAlgo
 from vm_placement.algorithms.solution import Solution
 from vm_placement.data_handling.processing import resource_columns
 from vm_placement.data_handling.sorting import compute_and_add_weighted_resources
 
 
-class BestFitAlgo(Algo):
+class BestFitAlgo(ApproxAlgo):
     def __init__(self, criterion: Union[str, List[str]]):
         self.sorting_criterion = criterion
 
@@ -63,6 +63,7 @@ if __name__ == '__main__':
         vm_filepath='data/vm_data.csv',
         server_specs=server_capacity
     )
+    data.vm_data = data.vm_data.loc[:50]
     best_fit = BestFitAlgo(criterion='Storage')
     solution = best_fit.solve(data.vm_data, data.server_data,)
     solution.display()

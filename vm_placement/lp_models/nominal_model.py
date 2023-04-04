@@ -3,16 +3,19 @@ from pyomo.environ import AbstractModel
 
 from vm_placement.data_handling.data_loader import Data
 
+import numpy as np
+
 
 class NominalModel:
-    def __init__(self, linear_relaxation: bool = False, solver: str = 'glpk', verbose: bool = False):
+    def __init__(self, linear_relaxation: bool = False, solver: str = 'glpk', verbose: int = 1):
         self.linear_relaxation: bool = linear_relaxation
         self.solver: str = solver
-        self.verbose: bool = verbose
+        self.verbose: int = verbose
         self.model = AbstractModel()
         self.model = self._add_variables(self.model)
         self.model = self._add_constraints(self.model)
         self.model = self._add_objective(self.model)
+        self.model_instance = None
 
     def _add_variables(self, model: AbstractModel) -> AbstractModel:
 
@@ -34,10 +37,9 @@ class NominalModel:
         model.storage_requirement = pyo.Param(model.I_vm, domain=pyo.NonNegativeReals)
 
         # Decision variables
-        domain = pyo.PercentFraction if self.linear_relaxation else pyo.Binary
-
-        model.x = pyo.Var(model.I_vm, model.J_server, domain=domain)
-        model.y = pyo.Var(model.J_server, domain=domain)
+        x_domain = pyo.PercentFraction if self.linear_relaxation else pyo.Binary
+        model.x = pyo.Var(model.I_vm, model.J_server, domain=x_domain)
+        model.y = pyo.Var(model.J_server, domain=pyo.NonNegativeIntegers)
 
         return model
 
@@ -72,12 +74,12 @@ class NominalModel:
             return model.x[i_vm, j_server] <= model.y[j_server]
 
         # Meeting VM demand
-        # model.DemandConstraint = pyo.Constraint(model.I_vm, rule=constraint_rule_vm_demand)
+        model.DemandConstraint = pyo.Constraint(model.I_vm, rule=constraint_rule_vm_demand)
 
         # Not going over server capacities
-        # model.CPUCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_cpu_capacity)
-        # model.MemoryCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_memory_capacity)
-        # model.StorageCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_storage_capacity)
+        model.CPUCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_cpu_capacity)
+        model.MemoryCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_memory_capacity)
+        model.StorageCapacityConstraint = pyo.Constraint(model.J_server, rule=constraint_rule_storage_capacity)
 
         # Counting the number of active servers
         model.ServerCountConstraint = pyo.Constraint(model.I_vm, model.J_server, rule=constraint_rule_server_count)
@@ -91,14 +93,16 @@ class NominalModel:
         return model
 
     def solve(self, data: Data):
-        print(self._ascii_art())
+        self._print(self._ascii_art())
         data_dict = self._format_data(data)
-        print(f"Instianting model with {len(data.vm_data)} VMs and {len(data.server_data)} server specification(s)...")
+        self._print(f"Instianting model with {len(data.vm_data)} VMs and {len(data.server_data)} server specification(s)...")
         model_instance = self.model.create_instance(data_dict)
         opt = pyo.SolverFactory(self.solver)
-        print(f"Launching solving with {self.solver}...{' [verbose off]' if not self.verbose else ''}")
-        solution = opt.solve(model_instance, tee=self.verbose)
-        return solution
+        self._print(f"Launching solving with {self.solver}...{' [verbose off]' if self.verbose < 2 else ''}")
+        solution = opt.solve(model_instance, tee=(self.verbose >= 2))
+        self._print(f"Best solution found: {pyo.value(model_instance.OBJ)}")
+        self.model_instance = model_instance
+        return model_instance, solution
 
     def _format_data(self, data: Data) -> dict:
 
@@ -126,6 +130,10 @@ class NominalModel:
             raise NotImplemented("Case with multiple server capacities not yet implemented")
         return data_dict
 
+    def _print(self, message: str):
+        if self.verbose > 0:
+            print(message)
+
     def _ascii_art(self) -> str:
         return """
 ██╗   ██╗███╗   ███╗    ██████╗ ██╗      █████╗  ██████╗███████╗███╗   ███╗███████╗███╗   ██╗████████╗
@@ -149,11 +157,13 @@ if __name__ == '__main__':
     })
     data = Data('data/vm_data.csv', server_capacity, 1)
     # Remove oversize VMs
-    data.vm_data = data.vm_data[data.vm_data['Storage'] <= 2048.0].reset_index()
+    data.filter_vms_by_resource('Storage', 2048)
+    # Use a subset of the VMs
+    data.subset_vms(10, seed=42)
 
     # Launch MIP solver
     model = NominalModel(linear_relaxation=True)
-    solution = model.solve(data)
+    model, solution = model.solve(data)
     print(solution)
 
 

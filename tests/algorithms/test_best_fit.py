@@ -1,10 +1,8 @@
 import pandas as pd
 import pytest
 
-from vm_placement.algorithms.algo import Algo
-from vm_placement.algorithms.best_fit import BestFitAlgo
+from vm_placement.algorithms.approximation.best_fit import BestFitAlgo
 from vm_placement.algorithms.solution import Solution
-from vm_placement.data_handling.sorting import calculate_scarcity_ratio
 
 
 @pytest.mark.parametrize("criterion", ["vCPU", "Memory", "Storage"])

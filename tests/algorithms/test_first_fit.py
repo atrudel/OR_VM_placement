@@ -2,7 +2,7 @@ from typing import Optional
 
 import pandas as pd
 
-from vm_placement.algorithms.first_fit import FirstFitDivideAlgo
+from vm_placement.algorithms.approximation.first_fit import FirstFitDivideAlgo
 
 
 

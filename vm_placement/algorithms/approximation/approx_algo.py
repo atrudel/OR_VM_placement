@@ -4,7 +4,7 @@ import pandas as pd
 
 from vm_placement.data_handling.processing import resource_columns
 
-class Algo:
+class ApproxAlgo:
     """This is a generic class that contains helper methods useful for all its child classes."""
     def _vm_fits_in_space_left(self, vm: pd.Series, space_left: pd.Series):
         return (space_left[resource_columns] >= vm[resource_columns]).all()

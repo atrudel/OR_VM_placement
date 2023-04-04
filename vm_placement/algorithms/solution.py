@@ -3,7 +3,6 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from vm_placement.algorithms.algo import Algo
 from vm_placement.data_handling.processing import resource_columns
 
 

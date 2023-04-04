@@ -2,14 +2,14 @@ from typing import Optional
 
 import pandas as pd
 
-from vm_placement.algorithms.algo import Algo
+from vm_placement.algorithms.approximation.approx_algo import ApproxAlgo
 from vm_placement.algorithms.solution import Solution
 from tqdm import tqdm
 
 from vm_placement.data_handling.processing import resource_columns
 
 
-class FirstFitAlgo(Algo):
+class FirstFitAlgo(ApproxAlgo):
     def solve(self, vms: pd.DataFrame, server_capacities: pd.DataFrame):
 
         server_fillings = pd.DataFrame(0, index=server_capacities.index, columns=server_capacities.columns)
@@ -27,7 +27,7 @@ class FirstFitAlgo(Algo):
         return Solution(server_capacities, server_fillings, oversize_vms, algo_name=str(self))
 
 
-class FirstFitDivideAlgo(Algo):
+class FirstFitDivideAlgo(ApproxAlgo):
 
     def solve(self, vms: pd.DataFrame, server_capacities: pd.DataFrame):
         curr_server: int = 0

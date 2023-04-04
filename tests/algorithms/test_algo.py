@@ -1,11 +1,11 @@
 import pandas as pd
 
-from vm_placement.algorithms.algo import Algo
+from vm_placement.algorithms.approximation.approx_algo import ApproxAlgo
 
 
 def test_vm_fits_in_server_when_empty():
     # Given
-    algo = Algo()
+    algo = ApproxAlgo()
     vm = pd.Series({
         'vCPU': 4,
         'Memory': 8,
@@ -31,7 +31,7 @@ def test_vm_fits_in_server_when_empty():
 
 def test_vm_fits_in_server_not_when_short_one_resource():
     # Given
-    algo = Algo()
+    algo = ApproxAlgo()
     vm = pd.Series({
         'vCPU': 4,
         'Memory': 8,
@@ -57,7 +57,7 @@ def test_vm_fits_in_server_not_when_short_one_resource():
 
 def test_vm_fits_in_server_not_when_server_filled():
     # Given
-    algo = Algo()
+    algo = ApproxAlgo()
     vm = pd.Series({
         'vCPU': 4,
         'Memory': 8,
@@ -83,7 +83,7 @@ def test_vm_fits_in_server_not_when_server_filled():
 
 def test_add_vm_to_server_correctly_adds_when_empty():
     # Given
-    algo: Algo = Algo()
+    algo: ApproxAlgo = ApproxAlgo()
     vm = pd.Series({
         'vCPU': 4,
         'Memory': 8,
@@ -112,7 +112,7 @@ def test_add_vm_to_server_correctly_adds_when_empty():
 
 def test_add_vm_to_server_correctly_adds_when_partially_filled():
     # Given
-    algo: Algo = Algo()
+    algo: ApproxAlgo = ApproxAlgo()
     vm = pd.Series({
         'vCPU': 4,
         'Memory': 8,

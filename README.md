@@ -20,17 +20,16 @@ cd OR_VM_placement
 pip install -e .
 ```
 
-## Demo Notebook
-A notebook named `demo.ipynb` is present at the root of the repository. 
-It calls the algorithmic functions developed in the `vm_placement` package and displays the results.
+## Demo Notebooks
+Two demo notebooks are present at the root of the repository:  
+- The first one is named `demo_fit_algos.ipynb` and calls the algorithmic functions developed in the `vm_placement` package and displays the results.  
+- [NEW!] The second one is `demo_linear_prog.ipynb` and calls the linear programming solver to find linear relaxation solutions for lower bounds.
 
 ## Upper-bound algorithms
 First-fit and Best-fit algorithms were implemented with heuristics to pack the VMs in the servers.
 They are implemented in the folder `vm_placement/algorithms`.
 
 ## Linear programming
-The nominal problem was modeled with Pyomo to obtain the linear relaxation. The script is found in
-`vm_placement/lp_models` and can be executed with the following command, while being located at the root of the repository.
-```shell
-python vm_placement/lp_models/nominal_model.py
-```
+The nominal problem was modeled with Pyomo to obtain the linear relaxation. It can also perform integer programming 
+with the keyword argument `linear_relaxation=False`. It is implemented in the folder `vm_placement/lp_models`.
+
